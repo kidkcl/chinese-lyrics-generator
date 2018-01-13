@@ -10,7 +10,7 @@ class Autoencoder:
         print(self.latent_dim)
 
     def build(self, sequence_length, input_dim):
-        inputs = Input(shape=(sequence_length, input_dim))
+        inputs = Input(shape=(None,))
         inputs = Embedding(input_dim, 100, input_length=sequence_length)(inputs)
         encoded = LSTM(self.latent_dim)(inputs)
 
