@@ -62,6 +62,7 @@ def main():
     model.build(seqence_len, vocab_size)
     print("build model done")
     model.autoencoder.compile(optimizer='rmsprop', loss='binary_crossentropy')
+    print(model.autoencoder.summary())
     model.autoencoder.fit(batch_X, batch_Y, epochs=epochs, batch_size=batch_size)
 
 if __name__ == "__main__":

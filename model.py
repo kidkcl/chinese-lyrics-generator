@@ -19,7 +19,6 @@ class Autoencoder:
 
         sequence_autoencoder = Model(inputs, decoded)
         encoder = Model(inputs, encoded)
-        sequence_autoencoder.summary()
         self.autoencoder = sequence_autoencoder
         self.encoder = encoder
 
