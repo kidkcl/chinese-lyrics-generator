@@ -58,11 +58,13 @@ def main():
         batch_Y.append(batch_X[i+1])
     batch_Y.append(batch_X[0]) # QQ
     # build model
-    model = Autoencoder(256) # latent_dim
-    model.build(seqence_len, vocab_size)
+    model = Autoencoder(64) # latent_dim
+    print(seqence_len)
+    autoencoder, encoder = model.build(seqence_len, vocab_size)
     print("build model done")
-    model.autoencoder.compile(optimizer='rmsprop', loss='binary_crossentropy')
-    model.autoencoder.fit(batch_X, batch_Y, epochs=epochs, batch_size=batch_size)
+    autoencoder.compile(optimizer='rmsprop', loss='binary_crossentropy')
+    print(autoencoder.summary())
+    autoencoder.fit(batch_X, batch_Y, epochs=epochs, batch_size=batch_size)
 
 if __name__ == "__main__":
     main()
