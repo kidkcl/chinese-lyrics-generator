@@ -1,4 +1,4 @@
-from keras.layers import Input, LSTM, RepeatVector, Embedding
+from keras.layers import Input, LSTM, RepeatVector, Embedding, Concatenate, Dense
 from keras.models import Model
 
 class Autoencoder:
@@ -14,10 +14,14 @@ class Autoencoder:
         embedded = Embedding(input_dim, 100, input_length=sequence_length)(inputs)
         encoded = LSTM(self.latent_dim)(embedded)
 
-        decoded = RepeatVector(sequence_length)(encoded)
-        decoded = LSTM(input_dim, return_sequences=True)(decoded)
+        encoder_outputs = RepeatVector(sequence_length)(encoded)
+        decoder_inputs = Input(shape=(None,))
+        decoder_embedded = Embedding(input_dim, 100, input_length=sequence_length)(decoder_inputs)
+        decoder_concat = Concatenate(axis=2)([encoder_outputs, decoder_embedded])
+        decoded = LSTM(self.latent_dim, return_sequences=True)(decoder_concat)
+        decoder_outputs = Dense(input_dim, activation='softmax')(decoded)
 
-        sequence_autoencoder = Model(inputs, decoded)
+        sequence_autoencoder = Model([inputs, decoder_inputs], decoder_outputs)
         encoder = Model(inputs, encoded)
         self.autoencoder = sequence_autoencoder
         self.encoder = encoder

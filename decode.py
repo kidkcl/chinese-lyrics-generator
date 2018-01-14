@@ -5,7 +5,6 @@ import keras
 import argparse
 from tqdm import tqdm
 from keras.optimizers import RMSprop
-from keras.callbacks import ModelCheckpoint
 from model import *
 
 config = tf.ConfigProto()
@@ -14,14 +13,14 @@ sess = tf.Session(config=config)
 
 keras.backend.set_session(sess)
 
-epochs = 100
+epochs = 50
 batch_size = 50
 seqence_len = 39
-num_samples = 5000
+num_samples = 1000
 
 def main():
     training_data = []
-    with open('pinyin.txt', 'r') as input_file:
+    with open('test.txt', 'r') as input_file:
         raw_data = input_file.readlines()
         for line in raw_data:
             line = line.strip()
@@ -45,6 +44,7 @@ def main():
     #        bi[index] = 1
     #        sequence_vector.append(bi)
     #    batch_X.append(sequence_vector)
+    #import ipdb; ipdb.set_trace()
     for line in tqdm(training_data):
         sequence_vector = []
         for word in line:
@@ -54,45 +54,40 @@ def main():
                 idx = word2idx[' ']
             sequence_vector.append(idx)
         batch_X.append(sequence_vector)
-    batch_Y = []
-    print("make batch_Y")
-    for i in tqdm(range(len(batch_X) - 1)):
-        target_line = [word2idx[' ']]
-        target_line += batch_X[i+1][:-1]
-        batch_Y.append(target_line)
-    target_line = [word2idx[' ']]
-    target_line += batch_X[-1][:-1]
-    print(target_line)
-    print(batch_Y[-2])
-    batch_Y.append(target_line) # QQ
-    batch_Out = []
-    for i in tqdm(range(len(batch_Y))):
-        out_vector = []
-        for j in range(1,len(batch_Y[i])):
-            bi = np.zeros(vocab_size)
-            bi[batch_Y[i][j]] = 1
-            out_vector.append(bi)
-        out_vector.append(np.zeros(vocab_size))
-        out_vector[-1][word2idx['eos']] = 1
-        batch_Out.append(out_vector)
     encoder_input = np.asarray(batch_X)
+    batch_Y = np.zeros(encoder_input.shape)
+    print("make batch_Y")
+    for i in tqdm(range(len(batch_Y))):
+        batch_Y[i][0] = word2idx[' ']
     decoder_input = np.asarray(batch_Y)
-    decoder_output = np.asarray(batch_Out)
     print(encoder_input.shape)
-    print(decoder_output.shape)
-    #import ipdb;ipdb.set_trace()
     # build model
-    model = Autoencoder(128) # latent_dim
-    print(seqence_len)
-    autoencoder, encoder = model.build(seqence_len, vocab_size)
-    print("build model done")
-    autoencoder.compile(optimizer='rmsprop', loss='categorical_crossentropy')
-    print(autoencoder.summary())
-    filepath="s2s_128/weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
-    checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True)
-    callbacks_list = [checkpoint]
-    autoencoder.fit([encoder_input, decoder_input], decoder_output, epochs=epochs, batch_size=batch_size, callbacks=callbacks_list)
-    autoencoder.save('s2s.h5')
+    model = keras.models.load_model('s2s_128/weights-improvement-84-0.7450.hdf5')
+    #model = keras.models.load_model('s2s_64_100_5000.h5')
+    output = []
+    for i in range(len(encoder_input)):
+        print(encoder_input[i].shape)
+        x = encoder_input[i].reshape(1,39)
+        y = decoder_input[i].reshape(1,39)
+        predict_seq = model.predict([x, y])
+        output.append(predict_seq)
+    output = np.asarray(output)
+    output = output.reshape(output.shape[0], output.shape[2], output.shape[3])
+    lyrics = ""
+    for i in range(len(output)):
+        text = []
+        for j in range(len(output[i])):
+            idx = np.argmax(output[i,j,:])
+            text.append(idx2word[idx])
+        #import ipdb; ipdb.set_trace()
+        print(' '.join(text))
+        lyrics += ' '.join(text)
+        lyrics += '\n'
+
+    print(lyrics)
+    with open("out.txt", 'wb') as train_file:
+        train_file.write(lyrics.encode('utf-8'))
+        train_file.close()
 
 if __name__ == "__main__":
     main()
