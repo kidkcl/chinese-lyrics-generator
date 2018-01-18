@@ -1,2 +1,5 @@
 __pycache__
 *.json
+*.h5
+*.hdf5
+*.txt
