@@ -1,5 +1,9 @@
 __pycache__
 *.json
 *.h5
+<<<<<<< HEAD
 *.hdf5
 *.txt
+=======
+*hdf5
+>>>>>>> 69c64d67cd920dc990066bc3456a9486593e459f
